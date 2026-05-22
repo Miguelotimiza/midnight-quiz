@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midnight Quiz - A Jornada do Cosseno</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        body { 
+            background: #05050f; color: #fff; min-height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative;
+        }
+        
+        /* Orbes de Luz de Fundo */
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; z-index: -1;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .orb-1 { width: 300px; height: 300px; background: #3498db; top: -50px; left: -50px; }
+        .orb-2 { width: 400px; height: 400px; background: #8e44ad; bottom: -100px; right: -50px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.2); } }
+
+        /* Card Principal */
+        .card { 
+            background: rgba(20, 20, 35, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 40px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05);
+            width: 90%; max-width: 550px; text-align: center;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            z-index: 10;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { font-weight: 800; font-size: 2.2rem; margin-bottom: 10px; background: linear-gradient(90deg, #3498db, #9b59b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-weight: 600; font-size: 1.5rem; margin-bottom: 20px; color: #ecf0f1; }
+        h3 { font-weight: 400; font-size: 1.2rem; margin-bottom: 30px; line-height: 1.5; }
+        
+        input { 
+            width: 100%; padding: 18px; margin: 15px 0; border-radius: 15px; border: 2px solid rgba(255,255,255,0.1); 
+            background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.1rem; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: #3498db; box-shadow: 0 0 15px rgba(52, 152, 219, 0.4); }
+
+        .avatar-grid { display: flex; justify-content: center; gap: 15px; margin: 25px 0; flex-wrap: wrap; }
+        .avatar-btn { 
+            cursor: pointer; font-size: 45px; background: rgba(255,255,255,0.05); width: 80px; height: 80px; 
+            display: flex; justify-content: center; align-items: center; border-radius: 25px; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid transparent;
+        }
+        .avatar-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.1); }
+        .selected { border-color: #3498db; background: rgba(52, 152, 219, 0.2); box-shadow: 0 0 25px rgba(52, 152, 219, 0.5); transform: scale(1.1); }
+
+        button.action-btn { 
+            width: 100%; padding: 18px; margin-top: 15px; border: none; border-radius: 15px; 
+            background: linear-gradient(135deg, #3498db, #2980b9); color: white; font-weight: 800; 
+            font-size: 1.1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        button.action-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6); }
+
+        .quiz-btn {
+            width: 100%; padding: 18px; margin: 10px 0; font-size: 1.1rem; cursor: pointer; 
+            border: 2px solid rgba(255,255,255,0.1); background: rgba(255, 255, 255, 0.05); color: #fff; 
+            border-radius: 15px; transition: all 0.2s ease; font-weight: 600;
+        }
+        .quiz-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); transform: translateX(5px); }
+        .quiz-btn:disabled { cursor: not-allowed; opacity: 0.9; }
+
+        .suspense-anim {
+            animation: pulseSuspense 0.3s infinite alternate !important;
+            pointer-events: none;
+        }
+        @keyframes pulseSuspense {
+            from { background: rgba(241, 196, 15, 0.2); border-color: #f1c40f; box-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
+            to { background: rgba(241, 196, 15, 0.5); border-color: #f39c12; box-shadow: 0 0 30px rgba(241, 196, 15, 0.8); }
+        }
+
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; color: #bdc3c7; }
+        .player-info { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #fff; }
+        .score-badge { background: rgba(52, 152, 219, 0.2); padding: 5px 15px; border-radius: 20px; border: 1px solid #3498db; color: #3498db; font-weight: bold; }
+
+        .dica-box { margin-top: 20px; padding: 15px; background: rgba(241, 196, 15, 0.1); border-left: 4px solid #f1c40f; border-radius: 0 10px 10px 0; display: none; text-align: left; font-size: 0.95rem; color: #f39c12; animation: fadeIn 0.4s ease; }
+        .dica-btn { background: transparent; border: 1px solid rgba(241, 196, 15, 0.5); color: #f1c40f; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; margin-top: 15px; transition: 0.3s; }
+        .dica-btn:hover { background: rgba(241, 196, 15, 0.1); border-color: #f1c40f; }
+
+        .confetti { position: fixed; top: -20px; z-index: 9999; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(105vh) rotate(720deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        footer { position: fixed; bottom: 20px; font-size: 0.7rem; opacity: 0.5; letter-spacing: 3px; text-transform: uppercase; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="card" id="app">
+        <h1>MIDNIGHT LOBBY</h1>
+        <h2>Identificação do Agente</h2>
+        <input type="text" id="playerName" placeholder="Insira seu Codinome..." autocomplete="off" onkeypress="if(event.key === 'Enter') enterGame()">
+        <h3 style="margin: 20px 0 10px; font-size: 1rem; color: #bdc3c7;">Escolha sua Skin</h3>
+        <div class="avatar-grid">
+            <div class="avatar-btn selected" onclick="selectAvatar('🐺', this)">🐺</div>
+            <div class="avatar-btn" onclick="selectAvatar('🦊', this)">🦊</div>
+            <div class="avatar-btn" onclick="selectAvatar('🤖', this)">🤖</div>
+            <div class="avatar-btn" onclick="selectAvatar('⚡', this)">⚡</div>
+            <div class="avatar-btn" onclick="selectAvatar('🔥', this)">🔥</div>
+        </div>
+        <button class="action-btn" onclick="enterGame()">INICIAR SIMULAÇÃO</button>
+    </div>
+
+    <footer>Midnight Studios © 2026</footer>
+
+    <script>
+        let userData = { name: "", avatar: "🐺" };
+        let qIdx = 0, score = 0;
+        let audioCtx; 
+
+        // 5 Questões completas com a do ENEM
+        const quizData = [
+            { p: "O que define o cosseno em um triângulo retângulo?", r: ["Cateto Adjacente / Hipotenusa", "Cateto Oposto / Hipotenusa", "Soma dos Catetos"], c: "Cateto Adjacente / Hipotenusa", d: "Dica: Lembre do Slide 2 da nossa apresentação." },
+            { p: "Se a hipotenusa mede 10cm e o cateto adjacente mede 8cm, qual o valor do cosseno?", r: ["0,8", "1,2", "0,6", "0,5"], c: "0,8", d: "Dica: Divida o cateto (8) pela hipotenusa (10)." },
+            { p: "No ciclo trigonométrico, qual é o valor exato de cos(180°)?", r: ["-1", "0", "1", "2"], c: "-1", d: "Dica: Fica na extremidade esquerda máxima do eixo horizontal." },
+            { p: "No 2º quadrante do ciclo trigonométrico, o cosseno é positivo ou negativo?", r: ["Negativo", "Positivo", "Nulo"], c: "Negativo", d: "Dica: No 2º quadrante, o eixo X (onde fica o cosseno) está à esquerda do zero." },
+            { p: "ENEM: Um topógrafo usa cos(60°) = 0,5 para medir um rio. Qual a relação entre o cateto adjacente e a hipotenusa?", r: ["A metade da hipotenusa", "O dobro da hipotenusa", "O triplo da hipotenusa"], c: "A metade da hipotenusa", d: "Dica: Se o resultado é 0,5 (ou 1/2), significa que o cateto é exatamente a metade do valor da hipotenusa." }
+        ];
+
+        // --- SISTEMA DE ÁUDIO ---
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, type, duration, vol = 0.1, delay = 0) {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + delay);
+            osc.stop(audioCtx.currentTime + delay + duration);
+        }
+
+        function somSuspense() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 2.5);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.5);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 2.5);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 2.5);
+        }
+
+        function somAcerto() {
+            playTone(523.25, 'sine', 0.5, 0.2, 0);   
+            playTone(659.25, 'sine', 0.5, 0.2, 0.1); 
+            playTone(783.99, 'sine', 0.5, 0.2, 0.2); 
+            playTone(1046.50, 'triangle', 0.8, 0.3, 0.3); 
+        }
+
+        function somErro() {
+            playTone(300, 'sawtooth', 0.4, 0.2, 0);
+            playTone(250, 'sawtooth', 0.6, 0.2, 0.2);
+            playTone(150, 'square', 0.8, 0.3, 0.4);
+        }
+
+        // --- LÓGICA DO JOGO ---
+        function selectAvatar(icon, el) {
+            initAudio(); 
+            document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+            userData.avatar = icon;
+            playTone(800, 'sine', 0.1, 0.1);
+        }
+
+        function enterGame() {
+            initAudio();
+            let inputName = document.getElementById('playerName').value.trim();
+            userData.name = inputName === "" ? "Agente Desconhecido" : inputName;
+            
+            playTone(400, 'sine', 0.5, 0.2);
+            playTone(800, 'sine', 0.5, 0.2, 0.2);
+            
+            const app = document.getElementById('app');
+            app.style.opacity = '0';
+            app.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                loadQuiz();
+                app.style.transition = 'all 0.5s ease';
+                app.style.opacity = '1';
+                app.style.transform = 'scale(1)';
+            }, 300);
+        }
+
+        function loadQuiz() {
+            if(qIdx >= quizData.length) {
+                showEndScreen();
+                return;
+            }
+
+            const q = quizData[qIdx];
+            let respostas = [...q.r].sort(() => Math.random() - 0.5);
+
+            document.getElementById('app').innerHTML = `
+                <div class="status-bar">
+                    <div class="player-info">
+                        <span style="font-size: 1.5rem;">${userData.avatar}</span> 
+                        <span>${userData.name}</span>
+                    </div>
+                    <div class="score-badge">Nível: ${qIdx + 1}/${quizData.length} | 🏆 ${score}</div>
+                </div>
+                <h3>${q.p}</h3>
+                <div id="opcoesBox">
+                    ${respostas.map(op => `<button class="quiz-btn" onclick="checkAnswer(this, '${op}', '${q.c}')">${op}</button>`).join('')}
+                </div>
+                <button class="dica-btn" onclick="mostrarDica()">💡 Solicitar Suporte Tático</button>
+                <div class="dica-box" id="dicaBox">${q.d}</div>
+            `;
+        }
+
+        function mostrarDica() {
+            document.getElementById('dicaBox').style.display = 'block';
+            document.querySelector('.dica-btn').style.display = 'none';
+        }
+
+        function checkAnswer(btnElement, opSelecionada, opCorreta) {
+            const todosBotoes = document.querySelectorAll('.quiz-btn');
+            todosBotoes.forEach(b => b.disabled = true);
+
+            const dicaBtn = document.querySelector('.dica-btn');
+            const dicaBox = document.getElementById('dicaBox');
+            if(dicaBtn) dicaBtn.style.display = 'none';
+            if(dicaBox) dicaBox.style.display = 'none';
+
+            somSuspense(); // Toca o suspense clássico de revelação de resposta
+            btnElement.classList.add('suspense-anim');
+
+            setTimeout(() => {
+                btnElement.classList.remove('suspense-anim');
+
+                if (opSelecionada === opCorreta) {
+                    btnElement.style.background = 'rgba(39, 174, 96, 0.4)';
+                    btnElement.style.borderColor = '#2ecc71';
+                    btnElement.style.boxShadow = '0 0 30px rgba(46, 204, 113, 0.6)';
+                    score++;
+                    somAcerto();
+                } else {
+                    btnElement.style.background = 'rgba(231, 76, 60, 0.4)';
+                    btnElement.style.borderColor = '#e74c3c';
+                    btnElement.style.boxShadow = '0 0 30px rgba(231, 76, 60, 0.6)';
+                    somErro();
+                    
+                    todosBotoes.forEach(b => {
+                        if(b.innerText === opCorreta) {
+                            b.style.background = 'rgba(39, 174, 96, 0.3)';
+                            b.style.borderColor = '#2ecc71';
+                        }
+                    });
+                }
+
+                setTimeout(() => {
+                    qIdx++;
+                    loadQuiz();
+                }, 2500);
+
+            }, 2500); 
+        }
+
+        function showEndScreen() {
+            let msg = "";
+            if (score === quizData.length) {
+                msg = "PERFEITO! Você dominou o sistema trigonométrico!";
+                triggerConfetti();
+                playTone(523.25, 'square', 0.2, 0.2, 0);
+                playTone(659.25, 'square', 0.2, 0.2, 0.2);
+                playTone(783.99, 'square', 0.2, 0.2, 0.4);
+                playTone(1046.50, 'square', 1.0, 0.3, 0.6);
+            } else if (score >= quizData.length / 2) {
+                msg = "MUITO BEM! A missão da engenharia está salva.";
+                triggerConfetti();
+            } else {
+                msg = "FALHA CRÍTICA. O sistema do cosseno não foi assimilado.";
+                somErro();
+            }
+
+            document.getElementById('app').innerHTML = `
+                <div style="font-size: 4rem; margin-bottom: 10px;">${userData.avatar}</div>
+                <h2>Relatório de Missão, ${userData.name}</h2>
+                <h1 style="font-size: 3.5rem; margin: 20px 0;">${score}/${quizData.length}</h1>
+                <h3>${msg}</h3>
+                <button class="action-btn" onclick="location.reload()" style="margin-top: 20px;">Reiniciar Sistema</button>
+            `;
+        }
+
+        function triggerConfetti() {
+            const cores = ['#3498db', '#e74c3c', '#f1c40f', '#2ecc71', '#9b59b6'];
+            for(let i=0; i<80; i++) {
+                let conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.width = Math.random() * 12 + 5 + 'px';
+                conf.style.height = conf.style.width;
+                conf.style.backgroundColor = cores[Math.floor(Math.random() * cores.length)];
+                conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                conf.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(conf);
+            }
+        }
+    </script>
+</body>
+</html>
